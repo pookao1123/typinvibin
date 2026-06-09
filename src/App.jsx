@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { topics } from './data/topics.js';
 import TopicNameInput from './components/TopicNameInput';
-import ContextWordInput from './components/ContextWordInput';
-import { splitContextIntoWords } from './utils/wordDetection';
+import WordProgressionInput from './components/WordProgressionInput';
 import './styles/globals.css';
 
 function App() {
   const [currentTopicIndex, setCurrentTopicIndex] = useState(0);
   const [stage, setStage] = useState('topic'); // 'topic' | 'context' | 'completed'
   const [topicInput, setTopicInput] = useState('');
-  const [contextInput, setContextInput] = useState('');
 
   const currentTopic = topics[currentTopicIndex];
-  const words = splitContextIntoWords(currentTopic.context);
 
   // Detect when topic name is complete
   useEffect(() => {
@@ -26,35 +23,17 @@ function App() {
     }
   }, [topicInput, currentTopic.name]);
 
-  // Detect when context is complete
-  useEffect(() => {
-    if (stage === 'context' && contextInput.length > 0) {
-      // Check if user has typed the full context
-      if (contextInput === currentTopic.context) {
-        setStage('completed');
-        const timer = setTimeout(() => {
-          advanceToNextTopic();
-        }, 1500);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [contextInput, currentTopic.context, stage]);
+  const handleContextComplete = () => {
+    setStage('completed');
+    const timer = setTimeout(() => {
+      advanceToNextTopic();
+    }, 1500);
+    return () => clearTimeout(timer);
+  };
 
   const advanceToNextTopic = () => {
     setCurrentTopicIndex((prev) => (prev + 1) % topics.length);
-    setContextInput('');
     setStage('topic');
-  };
-
-  // Determine current word being typed
-  const getCurrentWord = () => {
-    if (stage !== 'context') return '';
-
-    const typed = contextInput.trim();
-    const typedWords = typed.split(/\s+/).filter((w) => w);
-
-    if (typedWords.length === 0) return '';
-    return typedWords[typedWords.length - 1];
   };
 
   return (
@@ -75,17 +54,15 @@ function App() {
 
         {stage === 'contextLoading' && (
           <div className="loading-message">
-            Loading context...
+            Loading word progression...
           </div>
         )}
 
         {(stage === 'context' || stage === 'completed') && (
-          <ContextWordInput
+          <WordProgressionInput
             context={currentTopic.context}
-            userInput={contextInput}
-            onInputChange={setContextInput}
+            onComplete={handleContextComplete}
             isComplete={stage === 'completed'}
-            currentWord={getCurrentWord()}
           />
         )}
       </main>
@@ -93,9 +70,9 @@ function App() {
       <footer className="app-footer">
         <p>
           {stage === 'topic' && 'Type the topic name'}
-          {stage === 'context' && 'Type the context word by word'}
+          {stage === 'context' && 'Type each word character by character'}
           {stage === 'completed' && 'Perfect!'}
-          {stage === 'contextLoading' && 'Preparing context...'}
+          {stage === 'contextLoading' && 'Preparing word progression...'}
         </p>
       </footer>
     </div>
