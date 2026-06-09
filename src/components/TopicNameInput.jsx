@@ -1,14 +1,32 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import CharacterDisplay from './CharacterDisplay';
 
 function TopicNameInput({ topicName, userInput, onInputChange, isComplete }) {
-  const inputRef = useRef(null);
-
+  // Global window keydown listener
   useEffect(() => {
-    if (inputRef.current && !isComplete) {
-      inputRef.current.focus();
-    }
-  }, [isComplete]);
+    const handleKeyDown = (event) => {
+      // Filter control key combinations to allow browser shortcuts
+      if (event.ctrlKey || event.altKey || event.metaKey) {
+        return;
+      }
+
+      const char = event.key;
+
+      // Process single character input only up to topic name length
+      if (char.length === 1 && userInput.length < topicName.length && !isComplete) {
+        onInputChange(userInput + char);
+        event.preventDefault();
+      }
+      // Handle backspace for corrections
+      else if (char === 'Backspace' && userInput.length > 0) {
+        onInputChange(userInput.slice(0, -1));
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [userInput, topicName.length, isComplete, onInputChange]);
 
   const getCharacterStatus = (index) => {
     if (index < userInput.length) {
@@ -21,18 +39,6 @@ function TopicNameInput({ topicName, userInput, onInputChange, isComplete }) {
 
   return (
     <div className="topic-input-section">
-      <input
-        ref={inputRef}
-        type="text"
-        value={userInput}
-        onChange={(e) => onInputChange(e.target.value)}
-        disabled={isComplete}
-        className="hidden-input"
-        spellCheck="false"
-        autoComplete="off"
-        maxLength={topicName.length}
-      />
-
       <div className="topic-name-display">
         {topicName.split('').map((char, index) => (
           <CharacterDisplay

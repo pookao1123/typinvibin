@@ -11,7 +11,6 @@ import {
 import CharacterDisplay from './CharacterDisplay';
 
 function WordProgressionInput({ context, onComplete, isComplete }) {
-  const inputRef = useRef(null);
   const [wordIndex, setWordIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
@@ -22,19 +21,36 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
   const currentChar = getCurrentChar(currentWord, charIndex);
   const isInputCorrect = userInput.length > 0 && isCharacterCorrect(userInput[userInput.length - 1], currentChar);
 
+  // Global window keydown listener
   useEffect(() => {
-    if (inputRef.current && !isComplete) {
-      inputRef.current.focus();
-    }
-  }, [isComplete, wordIndex]);
+    const handleKeyDown = (event) => {
+      // Filter control key combinations to allow browser shortcuts
+      if (event.ctrlKey || event.altKey || event.metaKey) {
+        return;
+      }
 
-  const handleCharacterInput = (e) => {
-    const input = e.target.value;
+      const char = event.key;
+
+      // Process single character input
+      if (char.length === 1) {
+        handleCharacterInput(char);
+        event.preventDefault();
+      }
+      // Handle backspace for corrections
+      else if (char === 'Backspace') {
+        handleBackspace();
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [wordIndex, charIndex, userInput, currentWord, currentChar]);
+
+  const handleCharacterInput = (char) => {
+    const input = userInput + char;
     setUserInput(input);
 
-    if (input.length === 0) return;
-
-    const lastChar = input[input.length - 1];
     const expectedChar = currentChar;
 
     // Handle special characters (spaces, punctuation) - auto-skip
@@ -49,7 +65,7 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
     }
 
     // Check character input - if correct, advance
-    if (isCharacterCorrect(lastChar, expectedChar)) {
+    if (isCharacterCorrect(char, expectedChar)) {
       if (hasMoreChars(currentWord, charIndex + 1)) {
         setCharIndex(charIndex + 1);
         setUserInput('');
@@ -57,7 +73,17 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
         completeWord();
       }
     }
-    // If incorrect, just show red feedback and let user continue/backspace
+    // If incorrect, just show red feedback and let user backspace or continue
+  };
+
+  const handleBackspace = () => {
+    if (userInput.length > 0) {
+      setUserInput(userInput.slice(0, -1));
+    } else if (charIndex > 0) {
+      // Allow backspacing to previous character
+      setCharIndex(charIndex - 1);
+      setUserInput('');
+    }
   };
 
   const completeWord = () => {
@@ -69,9 +95,6 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
         setCharIndex(0);
         setUserInput('');
         setIsWordComplete(false);
-        if (inputRef.current) {
-          inputRef.current.focus();
-        }
       }, 600);
     } else {
       setTimeout(() => {
@@ -80,6 +103,7 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
     }
   };
 
+  // Render current word with character feedback
   const renderWord = () => {
     return (
       <div className="word-display">
@@ -106,18 +130,6 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
 
   return (
     <div className="word-progression-section">
-      <input
-        ref={inputRef}
-        type="text"
-        value={userInput}
-        onChange={handleCharacterInput}
-        disabled={isComplete || isWordComplete}
-        className="hidden-input"
-        spellCheck="false"
-        autoComplete="off"
-        maxLength={1}
-      />
-
       {renderWord()}
 
       {isWordComplete && (
