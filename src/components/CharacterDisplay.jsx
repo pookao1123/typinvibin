@@ -1,6 +1,6 @@
 import React from 'react';
 
-function CharacterDisplay({ char, status }) {
+function CharacterDisplay({ char, status, isCursor }) {
   // status: 'correct' | 'incorrect' | 'untyped'
   const getStatusClass = () => {
     switch (status) {
@@ -16,8 +16,9 @@ function CharacterDisplay({ char, status }) {
   };
 
   return (
-    <span className={`character ${getStatusClass()}`}>
-      {char === ' ' ? ' ' : char}
+    <span className={`character ${getStatusClass()} ${isCursor ? 'cursor-position' : ''}`}>
+      {char === ' ' ? ' ' : char}
+      {isCursor && <span className="cursor"></span>}
     </span>
   );
 }

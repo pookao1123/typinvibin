@@ -17,6 +17,8 @@ function TopicNameInput({ topicName, userInput, onInputChange, isComplete }) {
     return 'untyped';
   };
 
+  const cursorPosition = userInput.length;
+
   return (
     <div className="topic-input-section">
       <input
@@ -37,6 +39,7 @@ function TopicNameInput({ topicName, userInput, onInputChange, isComplete }) {
             key={index}
             char={char}
             status={getCharacterStatus(index)}
+            isCursor={index === cursorPosition}
           />
         ))}
       </div>

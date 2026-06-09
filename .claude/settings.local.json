@@ -10,7 +10,8 @@
       "Bash(git commit -m 'Initial commit: Create TypinVibin typing practice website *)",
       "Bash(git config *)",
       "Bash(npm run *)",
-      "Bash(git commit -m 'Redesign: Interactive two-phase typing experience *)"
+      "Bash(git commit -m 'Redesign: Interactive two-phase typing experience *)",
+      "Bash(git commit -m 'Add typing cursor with smooth animation and case-sensitive feedback *)"
     ]
   }
 }

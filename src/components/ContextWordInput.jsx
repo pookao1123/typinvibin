@@ -5,8 +5,6 @@ import { splitContextIntoWords } from '../utils/wordDetection';
 function ContextWordInput({ context, userInput, onInputChange, isComplete, currentWord }) {
   const inputRef = useRef(null);
   const words = splitContextIntoWords(context);
-  let charIndex = 0;
-  let wordIndex = 0;
 
   useEffect(() => {
     if (inputRef.current && !isComplete) {
@@ -22,7 +20,7 @@ function ContextWordInput({ context, userInput, onInputChange, isComplete, curre
   };
 
   const contextChars = context.split('');
-  let inputIndex = 0;
+  const cursorPosition = userInput.length;
 
   return (
     <div className="context-input-section">
@@ -48,6 +46,7 @@ function ContextWordInput({ context, userInput, onInputChange, isComplete, curre
               key={idx}
               char={char}
               status={getCharacterStatus(char, idx)}
+              isCursor={idx === cursorPosition}
             />
           ))}
         </p>
