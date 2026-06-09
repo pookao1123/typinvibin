@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /d \"D:\\\\VS\\\\Project\\\\TypinVibin\")",
+      "Bash(npm create *)",
+      "Bash(npm install *)",
+      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\nodejs;$env:PATH\"; node --version; npm --version)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'Initial commit: Create TypinVibin typing practice website *)",
+      "Bash(git config *)"
+    ]
+  }
+}
