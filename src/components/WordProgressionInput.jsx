@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { splitContextIntoWords } from '../utils/wordDetection';
 import {
   getCurrentWord,
@@ -20,6 +20,67 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
   const currentWord = getCurrentWord(words, wordIndex);
   const currentChar = getCurrentChar(currentWord, charIndex);
   const isInputCorrect = userInput.length > 0 && isCharacterCorrect(userInput[userInput.length - 1], currentChar);
+
+  // Memoized handler with stable reference - no dependencies
+  const handleCharacterInput = useCallback((char) => {
+    const word = getCurrentWord(words, wordIndex);
+    const expectedChar = getCurrentChar(word, charIndex);
+
+    setUserInput((prevInput) => prevInput + char);
+
+    // Handle special characters (spaces, punctuation) - auto-skip
+    if (isSpecialChar(expectedChar)) {
+      if (hasMoreChars(word, charIndex + 1)) {
+        setCharIndex((prev) => prev + 1);
+        setUserInput('');
+      } else {
+        completeWord();
+      }
+      return;
+    }
+
+    // Check character input - if correct, advance
+    if (isCharacterCorrect(char, expectedChar)) {
+      if (hasMoreChars(word, charIndex + 1)) {
+        setCharIndex((prev) => prev + 1);
+        setUserInput('');
+      } else {
+        completeWord();
+      }
+    }
+    // If incorrect, just show red feedback and let user backspace or continue
+  }, [wordIndex, charIndex, words]);
+
+  // Memoized backspace handler
+  const handleBackspace = useCallback(() => {
+    setUserInput((prevInput) => {
+      if (prevInput.length > 0) {
+        return prevInput.slice(0, -1);
+      } else if (charIndex > 0) {
+        setCharIndex((prev) => prev - 1);
+        return '';
+      }
+      return prevInput;
+    });
+  }, [charIndex]);
+
+  // Memoized word completion handler
+  const completeWord = useCallback(() => {
+    setIsWordComplete(true);
+
+    if (hasMoreWords(words, wordIndex)) {
+      setTimeout(() => {
+        setWordIndex((prev) => prev + 1);
+        setCharIndex(0);
+        setUserInput('');
+        setIsWordComplete(false);
+      }, 600);
+    } else {
+      setTimeout(() => {
+        onComplete();
+      }, 800);
+    }
+  }, [wordIndex, words, onComplete]);
 
   // Global window keydown listener
   useEffect(() => {
@@ -45,63 +106,7 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [wordIndex, charIndex, userInput, currentWord, currentChar]);
-
-  const handleCharacterInput = (char) => {
-    const input = userInput + char;
-    setUserInput(input);
-
-    const expectedChar = currentChar;
-
-    // Handle special characters (spaces, punctuation) - auto-skip
-    if (isSpecialChar(expectedChar)) {
-      if (hasMoreChars(currentWord, charIndex + 1)) {
-        setCharIndex(charIndex + 1);
-        setUserInput('');
-      } else {
-        completeWord();
-      }
-      return;
-    }
-
-    // Check character input - if correct, advance
-    if (isCharacterCorrect(char, expectedChar)) {
-      if (hasMoreChars(currentWord, charIndex + 1)) {
-        setCharIndex(charIndex + 1);
-        setUserInput('');
-      } else {
-        completeWord();
-      }
-    }
-    // If incorrect, just show red feedback and let user backspace or continue
-  };
-
-  const handleBackspace = () => {
-    if (userInput.length > 0) {
-      setUserInput(userInput.slice(0, -1));
-    } else if (charIndex > 0) {
-      // Allow backspacing to previous character
-      setCharIndex(charIndex - 1);
-      setUserInput('');
-    }
-  };
-
-  const completeWord = () => {
-    setIsWordComplete(true);
-
-    if (hasMoreWords(words, wordIndex)) {
-      setTimeout(() => {
-        setWordIndex(wordIndex + 1);
-        setCharIndex(0);
-        setUserInput('');
-        setIsWordComplete(false);
-      }, 600);
-    } else {
-      setTimeout(() => {
-        onComplete();
-      }, 800);
-    }
-  };
+  }, [handleCharacterInput, handleBackspace]);
 
   // Render current word with character feedback
   const renderWord = () => {
