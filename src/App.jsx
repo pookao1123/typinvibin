@@ -13,22 +13,19 @@ function App() {
 
   // Detect when topic name is complete
   useEffect(() => {
-    if (topicInput.length === currentTopic.name.length && topicInput === currentTopic.name) {
-      setStage('contextLoading');
-      const timer = setTimeout(() => {
+    if (stage === 'topic' && topicInput.length > 0) {
+      if (topicInput.length === currentTopic.name.length && topicInput === currentTopic.name) {
         setStage('context');
         setTopicInput('');
-      }, 600);
-      return () => clearTimeout(timer);
+      }
     }
-  }, [topicInput, currentTopic.name]);
+  }, [topicInput, currentTopic.name, stage]);
 
   const handleContextComplete = () => {
     setStage('completed');
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       advanceToNextTopic();
     }, 1500);
-    return () => clearTimeout(timer);
   };
 
   const advanceToNextTopic = () => {
@@ -52,17 +49,19 @@ function App() {
           />
         )}
 
-        {stage === 'contextLoading' && (
-          <div className="loading-message">
-            Loading word progression...
-          </div>
-        )}
-
-        {(stage === 'context' || stage === 'completed') && (
+        {stage === 'context' && (
           <WordProgressionInput
             context={currentTopic.context}
             onComplete={handleContextComplete}
-            isComplete={stage === 'completed'}
+            isComplete={false}
+          />
+        )}
+
+        {stage === 'completed' && (
+          <WordProgressionInput
+            context={currentTopic.context}
+            onComplete={handleContextComplete}
+            isComplete={true}
           />
         )}
       </main>

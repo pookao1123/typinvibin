@@ -43,24 +43,21 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
         setCharIndex(charIndex + 1);
         setUserInput('');
       } else {
-        // Word complete, move to next word
         completeWord();
       }
       return;
     }
 
-    // Check character input
+    // Check character input - if correct, advance
     if (isCharacterCorrect(lastChar, expectedChar)) {
-      // Correct character - advance cursor
       if (hasMoreChars(currentWord, charIndex + 1)) {
         setCharIndex(charIndex + 1);
         setUserInput('');
       } else {
-        // Word complete
         completeWord();
       }
     }
-    // If incorrect, just show red feedback, user can backspace or continue
+    // If incorrect, just show red feedback and let user continue/backspace
   };
 
   const completeWord = () => {
@@ -77,14 +74,12 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
         }
       }, 600);
     } else {
-      // All words complete
       setTimeout(() => {
         onComplete();
       }, 800);
     }
   };
 
-  // Render current word with character feedback
   const renderWord = () => {
     return (
       <div className="word-display">
