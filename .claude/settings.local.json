@@ -12,7 +12,8 @@
       "Bash(npm run *)",
       "Bash(git commit -m 'Redesign: Interactive two-phase typing experience *)",
       "Bash(git commit -m 'Add typing cursor with smooth animation and case-sensitive feedback *)",
-      "Bash(git commit -m 'Implement word-by-word character progression system *)"
+      "Bash(git commit -m 'Implement word-by-word character progression system *)",
+      "Bash(git commit -m 'Minimize UI - keep only text, background, and header *)"
     ]
   }
 }

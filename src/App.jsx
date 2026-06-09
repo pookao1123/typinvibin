@@ -68,12 +68,9 @@ function App() {
       </main>
 
       <footer className="app-footer">
-        <p>
-          {stage === 'topic' && 'Type the topic name'}
-          {stage === 'context' && 'Type each word character by character'}
-          {stage === 'completed' && 'Perfect!'}
-          {stage === 'contextLoading' && 'Preparing word progression...'}
-        </p>
+        {stage === 'topic' && 'Type the topic name'}
+        {stage === 'context' && 'Type each character'}
+        {stage === 'completed' && 'Perfect!'}
       </footer>
     </div>
   );

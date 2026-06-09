@@ -15,7 +15,6 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
   const [wordIndex, setWordIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
-  const [wordInputHistory, setWordInputHistory] = useState([]);
   const [isWordComplete, setIsWordComplete] = useState(false);
 
   const words = splitContextIntoWords(context);
@@ -60,15 +59,12 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
         // Word complete
         completeWord();
       }
-    } else {
-      // Incorrect character - keep showing red feedback but allow backspace
-      // User can continue typing or delete
     }
+    // If incorrect, just show red feedback, user can backspace or continue
   };
 
   const completeWord = () => {
     setIsWordComplete(true);
-    setWordInputHistory([...wordInputHistory, { word: currentWord, correct: true }]);
 
     if (hasMoreWords(words, wordIndex)) {
       setTimeout(() => {
@@ -76,6 +72,9 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
         setCharIndex(0);
         setUserInput('');
         setIsWordComplete(false);
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
       }, 600);
     } else {
       // All words complete
@@ -110,8 +109,6 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
     );
   };
 
-  const progressPercent = (wordIndex / words.length) * 100;
-
   return (
     <div className="word-progression-section">
       <input
@@ -126,45 +123,17 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
         maxLength={1}
       />
 
-      <div className="context-header">
-        <h3>Word by Word Practice</h3>
-      </div>
-
-      <div className="word-display-container">
-        {renderWord()}
-      </div>
-
-      <div className="character-feedback">
-        <div className="feedback-row">
-          <span className="feedback-label">Expected:</span>
-          <span className="feedback-value">{currentChar || '(space)'}</span>
-        </div>
-        <div className="feedback-row">
-          <span className="feedback-label">Your input:</span>
-          <span className={`feedback-value ${isInputCorrect ? 'correct' : (userInput.length > 0 ? 'incorrect' : '')}`}>
-            {userInput || '(waiting...)'}
-          </span>
-        </div>
-      </div>
-
-      <div className="progress-indicator">
-        <div className="progress-bar">
-          <div className="progress-fill" style={{ width: `${progressPercent}%` }}></div>
-        </div>
-        <div className="progress-text">
-          Word {wordIndex + 1} of {words.length} • Character {charIndex + 1} of {currentWord.length}
-        </div>
-      </div>
+      {renderWord()}
 
       {isWordComplete && (
         <div className="word-complete-message">
-          ✓ Perfect word! Loading next...
+          ✓
         </div>
       )}
 
       {isComplete && (
         <div className="context-complete-message">
-          ✨ Excellent! All words completed!
+          ✨ All words completed!
         </div>
       )}
     </div>
