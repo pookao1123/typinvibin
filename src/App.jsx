@@ -1,80 +1,102 @@
 import React, { useState, useEffect } from 'react';
 import { topics } from './data/topics.js';
-import TopicDisplay from './components/TopicDisplay';
-import ContextDisplay from './components/ContextDisplay';
-import TypingInput from './components/TypingInput';
-import Progress from './components/Progress';
+import TopicNameInput from './components/TopicNameInput';
+import ContextWordInput from './components/ContextWordInput';
+import { splitContextIntoWords } from './utils/wordDetection';
 import './styles/globals.css';
 
 function App() {
   const [currentTopicIndex, setCurrentTopicIndex] = useState(0);
-  const [userInput, setUserInput] = useState('');
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [stage, setStage] = useState('topic'); // 'topic' | 'context' | 'completed'
+  const [topicInput, setTopicInput] = useState('');
+  const [contextInput, setContextInput] = useState('');
 
   const currentTopic = topics[currentTopicIndex];
-  const progressPercent = (userInput.length / currentTopic.context.length) * 100;
-  const isMatching = userInput === currentTopic.context.substring(0, userInput.length);
+  const words = splitContextIntoWords(currentTopic.context);
 
+  // Detect when topic name is complete
   useEffect(() => {
-    if (userInput.length > 0 && userInput === currentTopic.context) {
-      setIsCompleted(true);
+    if (topicInput.length === currentTopic.name.length && topicInput === currentTopic.name) {
+      setStage('contextLoading');
       const timer = setTimeout(() => {
-        advanceToNextTopic();
-      }, 1500);
+        setStage('context');
+        setTopicInput('');
+      }, 600);
       return () => clearTimeout(timer);
     }
-  }, [userInput]);
+  }, [topicInput, currentTopic.name]);
+
+  // Detect when context is complete
+  useEffect(() => {
+    if (stage === 'context' && contextInput.length > 0) {
+      // Check if user has typed the full context
+      if (contextInput === currentTopic.context) {
+        setStage('completed');
+        const timer = setTimeout(() => {
+          advanceToNextTopic();
+        }, 1500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [contextInput, currentTopic.context, stage]);
 
   const advanceToNextTopic = () => {
     setCurrentTopicIndex((prev) => (prev + 1) % topics.length);
-    setUserInput('');
-    setIsCompleted(false);
+    setContextInput('');
+    setStage('topic');
+  };
+
+  // Determine current word being typed
+  const getCurrentWord = () => {
+    if (stage !== 'context') return '';
+
+    const typed = contextInput.trim();
+    const typedWords = typed.split(/\s+/).filter((w) => w);
+
+    if (typedWords.length === 0) return '';
+    return typedWords[typedWords.length - 1];
   };
 
   return (
     <div className="app-container">
-      <header className="header">
+      <header className="app-header">
         <h1>TypinVibin</h1>
-        <p className="subtitle">Immerse yourself in mindful typing practice</p>
       </header>
 
-      <main className="main-content">
-        <TopicDisplay
-          topic={currentTopic.name}
-          topicNumber={currentTopicIndex + 1}
-          totalTopics={topics.length}
-        />
+      <main className="app-main">
+        {stage === 'topic' && (
+          <TopicNameInput
+            topicName={currentTopic.name}
+            userInput={topicInput}
+            onInputChange={setTopicInput}
+            isComplete={false}
+          />
+        )}
 
-        <ContextDisplay
-          context={currentTopic.context}
-          userInput={userInput}
-          isMatching={isMatching}
-          isCompleted={isCompleted}
-        />
-
-        <TypingInput
-          value={userInput}
-          onChange={setUserInput}
-          disabled={isCompleted}
-          placeholder="Start typing..."
-        />
-
-        <Progress
-          completed={userInput.length}
-          total={currentTopic.context.length}
-          percent={progressPercent}
-          isCompleted={isCompleted}
-        />
-
-        {isCompleted && (
-          <div className="completion-message">
-            <p>✨ Perfect! Moving to next topic...</p>
+        {stage === 'contextLoading' && (
+          <div className="loading-message">
+            Loading context...
           </div>
+        )}
+
+        {(stage === 'context' || stage === 'completed') && (
+          <ContextWordInput
+            context={currentTopic.context}
+            userInput={contextInput}
+            onInputChange={setContextInput}
+            isComplete={stage === 'completed'}
+            currentWord={getCurrentWord()}
+          />
         )}
       </main>
 
-      <footer className="footer">
-        <p>Type to practice • Progress flows naturally • Take your time</p>
+      <footer className="app-footer">
+        <p>
+          {stage === 'topic' && 'Type the topic name'}
+          {stage === 'context' && 'Type the context word by word'}
+          {stage === 'completed' && 'Perfect!'}
+          {stage === 'contextLoading' && 'Preparing context...'}
+        </p>
       </footer>
     </div>
   );
