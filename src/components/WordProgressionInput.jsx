@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { splitContextIntoWords } from '../utils/wordDetection';
 import {
   getCurrentWord,
@@ -16,7 +16,6 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
   const [userInput, setUserInput] = useState('');
   const [isWordComplete, setIsWordComplete] = useState(false);
   const [charCorrectness, setCharCorrectness] = useState({}); // Track correctness for each position
-  const prevInputRef = useRef(''); // Track previous input to detect backspace
 
   const words = splitContextIntoWords(context);
   const currentWord = getCurrentWord(words, wordIndex);
@@ -58,44 +57,31 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
     }
   }, [wordIndex, charIndex, words]);
 
-  // Memoized backspace handler
+  // Memoized backspace handler - unified logic
   const handleBackspace = useCallback(() => {
-    // For context phase, handle backspace with proper state tracking
-    setUserInput((currentInput) => {
-      if (currentInput.length > 0) {
-        // User typed something at current position, delete it
-        const newInput = currentInput.slice(0, -1);
-        // When input becomes empty, clear feedback for this position
-        if (newInput.length === 0) {
-          setCharCorrectness((prev) => {
-            const updated = { ...prev };
-            delete updated[charIndex];
-            return updated;
-          });
-        }
-        return newInput;
+    // Handle delete from current input first
+    setUserInput((prevInput) => {
+      if (prevInput.length > 0) {
+        // Delete one character from current input
+        return prevInput.slice(0, -1);
       }
-      return currentInput;
+      return prevInput;
     });
-  }, [charIndex]);
 
-  // Separate effect to handle cursor movement when input is cleared via backspace
-  useEffect(() => {
-    // Detect when input became empty (backspace was pressed)
-    const wasCleared = prevInputRef.current.length > 0 && userInput.length === 0;
-    prevInputRef.current = userInput;
-
-    // If input was just cleared and we have positions to go back, move cursor back
-    if (wasCleared && charIndex > 0) {
-      setCharIndex((prev) => prev - 1);
-      // Clear feedback for the position we just left
-      setCharCorrectness((prev) => {
-        const updated = { ...prev };
-        delete updated[charIndex - 1];
-        return updated;
-      });
-    }
-  }, [userInput, charIndex]);
+    // Then check if we need to move cursor back
+    setCharIndex((prevIndex) => {
+      if (prevIndex > 0) {
+        // Move cursor back one position
+        setCharCorrectness((prev) => {
+          const updated = { ...prev };
+          delete updated[prevIndex - 1];
+          return updated;
+        });
+        return prevIndex - 1;
+      }
+      return prevIndex;
+    });
+  }, []);
 
   // Memoized word completion handler
   const completeWord = useCallback(() => {
