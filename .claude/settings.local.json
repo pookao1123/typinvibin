@@ -14,7 +14,8 @@
       "Bash(git commit -m 'Add typing cursor with smooth animation and case-sensitive feedback *)",
       "Bash(git commit -m 'Implement word-by-word character progression system *)",
       "Bash(git commit -m 'Minimize UI - keep only text, background, and header *)",
-      "Bash(git commit -m 'Migrate keyboard events to global window listeners *)"
+      "Bash(git commit -m 'Migrate keyboard events to global window listeners *)",
+      "Bash(git push *)"
     ]
   }
 }
