@@ -35,6 +35,7 @@ function App() {
     <div className="app-container">
       <header className="app-header">
         <h1>TypinVibin</h1>
+        <p className="current-topic">Topic: {currentTopic.name}</p>
       </header>
 
       <main className="app-main">
