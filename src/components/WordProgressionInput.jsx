@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { splitContextIntoWords } from '../utils/wordDetection';
 import {
   getCurrentWord,
@@ -16,6 +16,7 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
   const [userInput, setUserInput] = useState('');
   const [isWordComplete, setIsWordComplete] = useState(false);
   const [charCorrectness, setCharCorrectness] = useState({}); // Track correctness for each position
+  const prevInputRef = useRef(''); // Track previous input to detect backspace
 
   const words = splitContextIntoWords(context);
   const currentWord = getCurrentWord(words, wordIndex);
@@ -80,23 +81,21 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
 
   // Separate effect to handle cursor movement when input is cleared via backspace
   useEffect(() => {
-    // Only trigger if: input is empty AND we have positions to go back to
-    // The key is checking if the user JUST cleared the input (not just started empty)
-    if (userInput === '' && charIndex > 0) {
-      // Check if the current position has been typed (indicating we should stay here)
-      // If charCorrectness doesn't have current charIndex, user hasn't typed here yet
-      // So we can move back
-      if (!charCorrectness.hasOwnProperty(charIndex)) {
-        setCharIndex((prev) => prev - 1);
-        // Clear feedback for the position we just left
-        setCharCorrectness((prev) => {
-          const updated = { ...prev };
-          delete updated[charIndex - 1];
-          return updated;
-        });
-      }
+    // Detect when input became empty (backspace was pressed)
+    const wasCleared = prevInputRef.current.length > 0 && userInput.length === 0;
+    prevInputRef.current = userInput;
+
+    // If input was just cleared and we have positions to go back, move cursor back
+    if (wasCleared && charIndex > 0) {
+      setCharIndex((prev) => prev - 1);
+      // Clear feedback for the position we just left
+      setCharCorrectness((prev) => {
+        const updated = { ...prev };
+        delete updated[charIndex - 1];
+        return updated;
+      });
     }
-  }, [userInput]); // Only depend on userInput, not charIndex
+  }, [userInput, charIndex]);
 
   // Memoized word completion handler
   const completeWord = useCallback(() => {
