@@ -88,17 +88,15 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
     setIsWordComplete(true);
 
     if (hasMoreWords(words, wordIndex)) {
-      setTimeout(() => {
-        setWordIndex((prev) => prev + 1);
-        setCharIndex(0);
-        setUserInput('');
-        setCharCorrectness({}); // Reset for new word
-        setIsWordComplete(false);
-      }, 200); // Faster transition to next word
+      // Move to next word immediately - no delay blocking input
+      setWordIndex((prev) => prev + 1);
+      setCharIndex(0);
+      setUserInput('');
+      setCharCorrectness({}); // Reset for new word
+      setIsWordComplete(false);
     } else {
-      setTimeout(() => {
-        onComplete();
-      }, 300); // Faster completion transition
+      // Complete context immediately
+      onComplete();
     }
   }, [wordIndex, words, onComplete]);
 
