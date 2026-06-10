@@ -221,23 +221,7 @@ body {
   text-align: center;
 }
 
-.word-complete-message {
-  font-size: clamp(2rem, 5vw, 3rem);
-  color: var(--color-success);
-  animation: fadeInUp 0.4s ease-out;
-}
-
 /* ===== ANIMATIONS ===== */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {

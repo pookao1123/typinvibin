@@ -12,10 +12,13 @@ function TopicNameInput({ topicName, userInput, onInputChange, isComplete }) {
 
       const char = event.key;
 
-      // Process single character input only up to topic name length
-      if (char.length === 1 && userInput.length < topicName.length && !isComplete) {
-        onInputChange(userInput + char);
-        event.preventDefault();
+      // Process any single character input and track it (typo tolerance)
+      if (char.length === 1 && !isComplete) {
+        // Only add if we haven't filled all positions yet
+        if (userInput.length < topicName.length) {
+          onInputChange(userInput + char);
+          event.preventDefault();
+        }
       }
       // Handle backspace for corrections
       else if (char === 'Backspace' && userInput.length > 0) {

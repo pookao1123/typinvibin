@@ -11,10 +11,10 @@ function App() {
 
   const currentTopic = topics[currentTopicIndex];
 
-  // Detect when topic name is complete
+  // Detect when topic name is complete (length only, allow typos)
   useEffect(() => {
     if (stage === 'topic' && topicInput.length > 0) {
-      if (topicInput.length === currentTopic.name.length && topicInput === currentTopic.name) {
+      if (topicInput.length === currentTopic.name.length) {
         setStage('context');
         setTopicInput('');
       }

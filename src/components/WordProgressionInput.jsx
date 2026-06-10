@@ -15,6 +15,7 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
   const [charIndex, setCharIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
   const [isWordComplete, setIsWordComplete] = useState(false);
+  const [charCorrectness, setCharCorrectness] = useState({}); // Track correctness for each position
 
   const words = splitContextIntoWords(context);
   const currentWord = getCurrentWord(words, wordIndex);
@@ -39,16 +40,21 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
       return;
     }
 
-    // Check character input - if correct, advance
-    if (isCharacterCorrect(char, expectedChar)) {
-      if (hasMoreChars(word, charIndex + 1)) {
-        setCharIndex((prev) => prev + 1);
-        setUserInput('');
-      } else {
-        completeWord();
-      }
+    // Track whether this character is correct
+    const isCorrect = isCharacterCorrect(char, expectedChar);
+    setCharCorrectness((prev) => ({
+      ...prev,
+      [charIndex]: isCorrect
+    }));
+
+    // Advance cursor regardless of correctness (typo tolerance)
+    // Visual feedback (red/green) is shown by JSX status logic
+    if (hasMoreChars(word, charIndex + 1)) {
+      setCharIndex((prev) => prev + 1);
+      setUserInput('');
+    } else {
+      completeWord();
     }
-    // If incorrect, just show red feedback and let user backspace or continue
   }, [wordIndex, charIndex, words]);
 
   // Memoized backspace handler
@@ -73,6 +79,7 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
         setWordIndex((prev) => prev + 1);
         setCharIndex(0);
         setUserInput('');
+        setCharCorrectness({}); // Reset for new word
         setIsWordComplete(false);
       }, 600);
     } else {
@@ -114,9 +121,12 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
       <div className="word-display">
         {currentWord.split('').map((char, idx) => {
           let status = 'untyped';
-          if (idx < charIndex) {
-            status = 'correct';
+
+          // Check if this position has been typed
+          if (charCorrectness.hasOwnProperty(idx)) {
+            status = charCorrectness[idx] ? 'correct' : 'incorrect';
           } else if (idx === charIndex) {
+            // Current position - show based on current input
             status = isInputCorrect ? 'correct' : (userInput.length > 0 ? 'incorrect' : 'untyped');
           }
 
@@ -136,12 +146,6 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
   return (
     <div className="word-progression-section">
       {renderWord()}
-
-      {isWordComplete && (
-        <div className="word-complete-message">
-          ✓
-        </div>
-      )}
 
       {isComplete && (
         <div className="context-complete-message">
