@@ -61,9 +61,26 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
   const handleBackspace = useCallback(() => {
     setUserInput((prevInput) => {
       if (prevInput.length > 0) {
-        return prevInput.slice(0, -1);
+        // Delete from current input
+        const newInput = prevInput.slice(0, -1);
+        // If input becomes empty, clear charCorrectness for current position
+        if (newInput.length === 0) {
+          setCharCorrectness((prev) => {
+            const updated = { ...prev };
+            delete updated[charIndex];
+            return updated;
+          });
+        }
+        return newInput;
       } else if (charIndex > 0) {
+        // Move cursor back to previous character
         setCharIndex((prev) => prev - 1);
+        // Clear correctness for the position we're moving back to
+        setCharCorrectness((prev) => {
+          const updated = { ...prev };
+          delete updated[charIndex - 1];
+          return updated;
+        });
         return '';
       }
       return prevInput;
@@ -81,11 +98,11 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
         setUserInput('');
         setCharCorrectness({}); // Reset for new word
         setIsWordComplete(false);
-      }, 600);
+      }, 200); // Faster transition to next word
     } else {
       setTimeout(() => {
         onComplete();
-      }, 800);
+      }, 300); // Faster completion transition
     }
   }, [wordIndex, words, onComplete]);
 
