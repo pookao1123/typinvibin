@@ -59,11 +59,12 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
 
   // Memoized backspace handler
   const handleBackspace = useCallback(() => {
-    setUserInput((prevInput) => {
-      if (prevInput.length > 0) {
-        // Delete from current input
-        const newInput = prevInput.slice(0, -1);
-        // If input becomes empty, clear charCorrectness for current position
+    // For context phase, handle backspace with proper state tracking
+    setUserInput((currentInput) => {
+      if (currentInput.length > 0) {
+        // User typed something at current position, delete it
+        const newInput = currentInput.slice(0, -1);
+        // When input becomes empty, clear feedback for this position
         if (newInput.length === 0) {
           setCharCorrectness((prev) => {
             const updated = { ...prev };
@@ -72,20 +73,30 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
           });
         }
         return newInput;
-      } else if (charIndex > 0) {
-        // Move cursor back to previous character
+      }
+      return currentInput;
+    });
+  }, [charIndex]);
+
+  // Separate effect to handle cursor movement when input is cleared via backspace
+  useEffect(() => {
+    // Only trigger if: input is empty AND we have positions to go back to
+    // The key is checking if the user JUST cleared the input (not just started empty)
+    if (userInput === '' && charIndex > 0) {
+      // Check if the current position has been typed (indicating we should stay here)
+      // If charCorrectness doesn't have current charIndex, user hasn't typed here yet
+      // So we can move back
+      if (!charCorrectness.hasOwnProperty(charIndex)) {
         setCharIndex((prev) => prev - 1);
-        // Clear correctness for the position we're moving back to
+        // Clear feedback for the position we just left
         setCharCorrectness((prev) => {
           const updated = { ...prev };
           delete updated[charIndex - 1];
           return updated;
         });
-        return '';
       }
-      return prevInput;
-    });
-  }, [charIndex]);
+    }
+  }, [userInput]); // Only depend on userInput, not charIndex
 
   // Memoized word completion handler
   const completeWord = useCallback(() => {
