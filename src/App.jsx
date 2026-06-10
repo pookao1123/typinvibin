@@ -22,10 +22,8 @@ function App() {
   }, [topicInput, currentTopic.name, stage]);
 
   const handleContextComplete = () => {
-    setStage('completed');
-    setTimeout(() => {
-      advanceToNextTopic();
-    }, 1500);
+    // Instantly advance to next topic - no delay, no notification
+    advanceToNextTopic();
   };
 
   const advanceToNextTopic = () => {

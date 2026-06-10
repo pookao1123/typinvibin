@@ -157,12 +157,6 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
   return (
     <div className="word-progression-section">
       {renderWord()}
-
-      {isComplete && (
-        <div className="context-complete-message">
-          ✨ All words completed!
-        </div>
-      )}
     </div>
   );
 }
