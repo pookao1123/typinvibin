@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { splitContextIntoWords } from '../utils/wordDetection';
 import {
   getCurrentWord,
@@ -8,22 +8,46 @@ import {
   hasMoreChars,
   hasMoreWords
 } from '../utils/wordProgression';
-import CharacterDisplay from './CharacterDisplay';
+import CharacterDisplay, { CharStatus } from './CharacterDisplay';
 
-function WordProgressionInput({ context, onComplete, isComplete }) {
+interface WordProgressionInputProps {
+  context: string;
+  onComplete: () => void;
+  isComplete: boolean;
+}
+
+function WordProgressionInput({ context, onComplete }: WordProgressionInputProps) {
   const [wordIndex, setWordIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
   const [isWordComplete, setIsWordComplete] = useState(false);
-  const [charCorrectness, setCharCorrectness] = useState({}); // Track correctness for each position
+  // Track correctness for each position
+  const [charCorrectness, setCharCorrectness] = useState<Record<number, boolean>>({});
 
   const words = splitContextIntoWords(context);
   const currentWord = getCurrentWord(words, wordIndex);
   const currentChar = getCurrentChar(currentWord, charIndex);
   const isInputCorrect = userInput.length > 0 && isCharacterCorrect(userInput[userInput.length - 1], currentChar);
 
-  // Memoized handler with stable reference - no dependencies
-  const handleCharacterInput = useCallback((char) => {
+  // Memoized word completion handler
+  const completeWord = useCallback(() => {
+    setIsWordComplete(true);
+
+    if (hasMoreWords(words, wordIndex)) {
+      // Move to next word immediately - no delay blocking input
+      setWordIndex((prev) => prev + 1);
+      setCharIndex(0);
+      setUserInput('');
+      setCharCorrectness({}); // Reset for new word
+      setIsWordComplete(false);
+    } else {
+      // Complete context immediately
+      onComplete();
+    }
+  }, [wordIndex, words, onComplete]);
+
+  // Memoized handler with stable reference
+  const handleCharacterInput = useCallback((char: string) => {
     const word = getCurrentWord(words, wordIndex);
     const expectedChar = getCurrentChar(word, charIndex);
 
@@ -55,7 +79,7 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
     } else {
       completeWord();
     }
-  }, [wordIndex, charIndex, words]);
+  }, [wordIndex, charIndex, words, completeWord]);
 
   // Memoized backspace handler - unified logic
   const handleBackspace = useCallback(() => {
@@ -83,26 +107,9 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
     });
   }, []);
 
-  // Memoized word completion handler
-  const completeWord = useCallback(() => {
-    setIsWordComplete(true);
-
-    if (hasMoreWords(words, wordIndex)) {
-      // Move to next word immediately - no delay blocking input
-      setWordIndex((prev) => prev + 1);
-      setCharIndex(0);
-      setUserInput('');
-      setCharCorrectness({}); // Reset for new word
-      setIsWordComplete(false);
-    } else {
-      // Complete context immediately
-      onComplete();
-    }
-  }, [wordIndex, words, onComplete]);
-
   // Global window keydown listener
   useEffect(() => {
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       // Filter control key combinations to allow browser shortcuts
       if (event.ctrlKey || event.altKey || event.metaKey) {
         return;
@@ -131,10 +138,10 @@ function WordProgressionInput({ context, onComplete, isComplete }) {
     return (
       <div className="word-display">
         {currentWord.split('').map((char, idx) => {
-          let status = 'untyped';
+          let status: CharStatus = 'untyped';
 
           // Check if this position has been typed
-          if (charCorrectness.hasOwnProperty(idx)) {
+          if (Object.prototype.hasOwnProperty.call(charCorrectness, idx)) {
             status = charCorrectness[idx] ? 'correct' : 'incorrect';
           } else if (idx === charIndex) {
             // Current position - show based on current input

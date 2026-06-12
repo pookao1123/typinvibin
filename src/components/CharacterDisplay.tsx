@@ -1,8 +1,13 @@
-import React from 'react';
+export type CharStatus = 'correct' | 'incorrect' | 'untyped';
 
-function CharacterDisplay({ char, status, isCursor }) {
-  // status: 'correct' | 'incorrect' | 'untyped'
-  const getStatusClass = () => {
+interface CharacterDisplayProps {
+  char: string;
+  status: CharStatus;
+  isCursor: boolean;
+}
+
+function CharacterDisplay({ char, status, isCursor }: CharacterDisplayProps) {
+  const getStatusClass = (): string => {
     switch (status) {
       case 'correct':
         return 'char-correct';

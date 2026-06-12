@@ -1,10 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import CharacterDisplay from './CharacterDisplay';
+import { useEffect } from 'react';
+import CharacterDisplay, { CharStatus } from './CharacterDisplay';
 
-function TopicNameInput({ topicName, userInput, onInputChange, isComplete }) {
+interface TopicNameInputProps {
+  topicName: string;
+  userInput: string;
+  onInputChange: (input: string) => void;
+  isComplete: boolean;
+}
+
+function TopicNameInput({ topicName, userInput, onInputChange, isComplete }: TopicNameInputProps) {
   // Global window keydown listener
   useEffect(() => {
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       // Filter control key combinations to allow browser shortcuts
       if (event.ctrlKey || event.altKey || event.metaKey) {
         return;
@@ -31,7 +38,7 @@ function TopicNameInput({ topicName, userInput, onInputChange, isComplete }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [userInput, topicName.length, isComplete, onInputChange]);
 
-  const getCharacterStatus = (index) => {
+  const getCharacterStatus = (index: number): CharStatus => {
     if (index < userInput.length) {
       return userInput[index] === topicName[index] ? 'correct' : 'incorrect';
     }

@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Theme variables — controlled from the settings panel */
+:root {
+  --bg: #fafafa;
+  --panel: #ffffff;
+  --border: #e0e0e0;
+  --text: #1a1a1a;
+  --dim: #666666;
+  --font-scale: 1;
+  --bg-opacity: 0.2;
+}
+
+[data-theme='dark'] {
+  --bg: #0d1117;
+  --panel: #161b22;
+  --border: #30363d;
+  --text: #c9d1d9;
+  --dim: #8b949e;
+}
+
 /* Custom utilities and overrides */
 html,
 body {
@@ -9,10 +28,11 @@ body {
 }
 
 body {
-  background-color: #fafafa;
-  color: #1a1a1a;
+  background-color: var(--bg);
+  color: var(--text);
   line-height: 1.6;
   overflow-x: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 #root {
@@ -22,47 +42,207 @@ body {
 }
 
 .app-container {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100vh;
   width: 100%;
 }
 
+/* Crossfading background photo layers (behind all content) */
+.bg-stack {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: var(--bg-opacity);
+  pointer-events: none;
+}
+
+.bg-layer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  animation: bgFadeIn 0.8s ease forwards;
+}
+
+@keyframes bgFadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
 .app-header {
+  /* Above .app-main so the settings dropdown stays clickable */
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
   padding: 1.5rem 2rem;
-  text-align: center;
-  border-bottom: 1px solid #e0e0e0;
+}
+
+.app-logo {
+  display: flex;
+  align-items: center;
 }
 
 .app-header h1 {
   font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.5px;
-  margin-bottom: 0.5rem;
+}
+
+.topic-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.topic-nav-btn {
+  border: none;
+  background: transparent;
+  color: var(--dim);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.1rem 0.4rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.2s ease;
+}
+
+.topic-nav-btn:hover:not(:disabled) {
+  color: var(--text);
+}
+
+.topic-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .current-topic {
   font-size: 0.875rem;
-  color: #666;
+  color: var(--dim);
   margin: 0;
   font-weight: 400;
 }
 
+/* Playback mode toggles inside the settings panel */
+.playback-toggles {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.playback-toggle {
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  opacity: 0.45;
+  filter: grayscale(1);
+  transition: all 0.2s ease;
+}
+
+.playback-toggle.active {
+  opacity: 1;
+  filter: none;
+  border-color: #52b788;
+  background-color: rgba(82, 183, 136, 0.12);
+}
+
+
+/* Settings (gear icon top right + dropdown panel) */
+.settings {
+  position: relative;
+  margin-left: auto;
+  align-self: center;
+}
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  border: none;
+  background: transparent;
+  color: var(--dim);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: color 0.2s ease, transform 0.3s ease;
+}
+
+.settings-toggle:hover {
+  color: var(--text);
+  transform: rotate(45deg);
+}
+
+.settings-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 10;
+  width: 300px;
+  padding: 1.25rem 1.5rem;
+  background-color: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  min-height: 1.75rem;
+}
+
+.settings-label {
+  flex: 0 0 5.75rem;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.settings-row input[type='range'] {
+  flex: 1;
+  min-width: 0;
+  accent-color: #52b788;
+}
+
+.settings-row input[type='checkbox'] {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: #52b788;
+  cursor: pointer;
+}
+
+.settings-value {
+  flex: 0 0 2.75rem;
+  text-align: right;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .app-main {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
   overflow-y: auto;
-}
-
-.app-footer {
-  padding: 1.5rem 2rem;
-  text-align: center;
-  border-top: 1px solid #e0e0e0;
-  font-size: 0.875rem;
-  color: #666;
 }
 
 .topic-input-section {
@@ -75,7 +255,7 @@ body {
 }
 
 .topic-name-display {
-  font-size: clamp(3rem, 10vw, 8rem);
+  font-size: calc(clamp(3rem, 10vw, 8rem) * var(--font-scale));
   font-weight: 700;
   letter-spacing: 0.05em;
   text-align: center;
@@ -109,7 +289,7 @@ body {
 }
 
 .char-untyped {
-  color: #666;
+  color: var(--dim);
   opacity: 0.4;
 }
 
@@ -176,7 +356,7 @@ body {
 }
 
 .word-display {
-  font-size: clamp(3rem, 10vw, 8rem);
+  font-size: calc(clamp(3rem, 10vw, 8rem) * var(--font-scale));
   font-weight: 700;
   letter-spacing: 0.1em;
   text-align: center;
@@ -204,10 +384,6 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .app-container {
-    padding: 1.5rem;
-  }
-
   .app-main {
     padding: 1.5rem;
   }
@@ -224,11 +400,6 @@ body {
 
   .app-header h1 {
     font-size: 1rem;
-  }
-
-  .app-footer {
-    padding: 1rem;
-    font-size: 0.75rem;
   }
 
   .topic-input-section {

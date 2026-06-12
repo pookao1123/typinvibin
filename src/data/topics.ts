@@ -1,4 +1,10 @@
-export const topics = [
+export interface Topic {
+  id: number;
+  name: string;
+  context: string;
+}
+
+export const topics: Topic[] = [
   {
     id: 1,
     name: "Nature",
@@ -38,5 +44,10 @@ export const topics = [
     id: 8,
     name: "Mountain",
     context: "Rising majestically from earth to sky, mountains touch clouds and command respect. The air grows thin, requiring you to breathe deliberately and deeply. From this height, the world below becomes clear, perspectives shift, worries diminish. Standing on stone older than civilization, you feel both impossibly small and infinitely significant."
+  },
+  {
+    id: 9,
+    name: "Hills",
+    context: "Gentle slopes roll toward the horizon like waves frozen in green. Morning mist settles in the hollows, soft and silver, lifting slowly as the sun climbs. Grass bends in long ripples under a wandering breeze, carrying the scent of wildflowers and warm earth. Paths wind lazily over each crest, promising another quiet view beyond. The hills ask nothing of you but to walk slowly and breathe."
   }
 ];
