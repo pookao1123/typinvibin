@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings } from '../settings';
+import { Settings, FADE_STEPS, BG_INTERVAL_STEPS } from '../settings';
 
 interface SettingsPanelProps {
   settings: Settings;
@@ -56,6 +56,36 @@ function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
             />
           </div>
 
+          <div className={`settings-row ${settings.bgmOn ? '' : 'settings-row-disabled'}`}>
+            <span className="settings-label">Volume</span>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={settings.bgmVolume}
+              disabled={!settings.bgmOn}
+              onChange={(e) => onChange({ bgmVolume: parseFloat(e.target.value) })}
+            />
+            <span className="settings-value">{Math.round(settings.bgmVolume * 100)}%</span>
+          </div>
+
+          <div className={`settings-row ${settings.bgmOn ? '' : 'settings-row-disabled'}`}>
+            <span className="settings-label">Fade</span>
+            <select
+              className="settings-select"
+              value={settings.bgmFade}
+              disabled={!settings.bgmOn}
+              onChange={(e) => onChange({ bgmFade: parseFloat(e.target.value) })}
+            >
+              {FADE_STEPS.map((s) => (
+                <option key={s} value={s}>
+                  {s} s
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="settings-row">
             <span className="settings-label">Background</span>
             <input
@@ -67,6 +97,21 @@ function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
               onChange={(e) => onChange({ bgOpacity: parseFloat(e.target.value) })}
             />
             <span className="settings-value">{Math.round(settings.bgOpacity * 100)}%</span>
+          </div>
+
+          <div className="settings-row">
+            <span className="settings-label">BG change</span>
+            <select
+              className="settings-select"
+              value={settings.bgInterval}
+              onChange={(e) => onChange({ bgInterval: parseInt(e.target.value, 10) })}
+            >
+              {BG_INTERVAL_STEPS.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="settings-row">

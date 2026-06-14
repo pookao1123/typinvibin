@@ -126,6 +126,71 @@ body {
   color: var(--dim);
   margin: 0;
   font-weight: 400;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* BGM now-playing display with track skip buttons */
+.bgm-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+  transition: opacity 0.2s ease;
+}
+
+.bgm-dimmed {
+  opacity: 0.45;
+}
+
+.bgm-btn {
+  border: none;
+  background: transparent;
+  color: var(--dim);
+  font-size: 0.8rem;
+  line-height: 1;
+  padding: 0.2rem 0.3rem;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.2s ease;
+}
+
+.bgm-btn:hover:not(:disabled) {
+  color: var(--text);
+}
+
+.bgm-btn:disabled {
+  cursor: not-allowed;
+}
+
+.bgm-track {
+  width: 200px;
+  font-size: 0.8125rem;
+  color: var(--dim);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Scrolling marquee for the current track name */
+.bgm-track-text {
+  display: inline-block;
+  white-space: nowrap;
+  padding-left: 100%;
+  animation: marquee 10s linear infinite;
+}
+
+.bgm-dimmed .bgm-track-text {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
 }
 
 /* Playback mode toggles inside the settings panel */
@@ -161,7 +226,7 @@ body {
 /* Settings (gear icon top right + dropdown panel) */
 .settings {
   position: relative;
-  margin-left: auto;
+  margin-left: 0.75rem;
   align-self: center;
 }
 
@@ -234,6 +299,35 @@ body {
   white-space: nowrap;
 }
 
+.settings-select {
+  flex: 1;
+  min-width: 0;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  color: var(--text);
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.settings-select:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Disabled state (e.g. Volume while BGM is off) */
+.settings-row-disabled .settings-label,
+.settings-row-disabled .settings-value {
+  opacity: 0.4;
+}
+
+.settings-row input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .app-main {
   position: relative;
   z-index: 1;
@@ -243,6 +337,12 @@ body {
   justify-content: center;
   padding: 2rem;
   overflow-y: auto;
+}
+
+.app-status {
+  font-size: 1.25rem;
+  color: var(--dim);
+  opacity: 0.7;
 }
 
 .topic-input-section {
@@ -266,6 +366,19 @@ body {
   align-items: center;
   justify-content: center;
   font-family: 'Courier New', monospace;
+  /* Begin animation — plays once each time a topic starts */
+  animation: topicBegin 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes topicBegin {
+  from {
+    opacity: 0;
+    transform: translateY(35px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .topic-name-display .character {
@@ -355,6 +468,14 @@ body {
   justify-content: center;
 }
 
+/* Positioning context so the exiting word can overlay the current one */
+.word-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .word-display {
   font-size: calc(clamp(3rem, 10vw, 8rem) * var(--font-scale));
   font-weight: 700;
@@ -364,6 +485,60 @@ body {
   display: flex;
   gap: 0.2em;
   align-items: flex-start;
+  animation: wordRise 0.5s ease-out;
+}
+
+/* Finished word pans up and fades out above the incoming word */
+.word-exit {
+  position: absolute;
+  top: 0;
+  pointer-events: none;
+  animation: wordExit 0.5s ease-out forwards;
+}
+
+@keyframes wordExit {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-90%);
+    opacity: 0;
+  }
+}
+
+/* Preview of the upcoming word, below the current one */
+.word-next {
+  font-size: calc(clamp(3rem, 10vw, 8rem) * var(--font-scale) * 0.55);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  font-family: 'Courier New', monospace;
+  color: var(--dim);
+  opacity: 0.45;
+  animation: nextWordIn 0.5s ease-out;
+}
+
+/* New current word slides up from the preview position/size */
+@keyframes wordRise {
+  from {
+    transform: translateY(45%) scale(0.55);
+    opacity: 0.45;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes nextWordIn {
+  from {
+    transform: translateY(40%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
 }
 
 .word-display .character {
@@ -386,6 +561,10 @@ body {
 @media (max-width: 768px) {
   .app-main {
     padding: 1.5rem;
+  }
+
+  .bgm-track {
+    width: 110px;
   }
 
   .topic-name-display {

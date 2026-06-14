@@ -23,17 +23,38 @@ function WordProgressionInput({ context, onComplete }: WordProgressionInputProps
   const [isWordComplete, setIsWordComplete] = useState(false);
   // Track correctness for each position
   const [charCorrectness, setCharCorrectness] = useState<Record<number, boolean>>({});
+  // Finished word kept mounted briefly so it can pan up + fade out
+  const [exiting, setExiting] = useState<{
+    word: string;
+    correctness: Record<number, boolean>;
+    id: number;
+  } | null>(null);
+
+  // Fallback cleanup in case animationend never fires (e.g. hidden tab)
+  useEffect(() => {
+    if (!exiting) return;
+    const id = window.setTimeout(() => setExiting(null), 700);
+    return () => window.clearTimeout(id);
+  }, [exiting]);
 
   const words = splitContextIntoWords(context);
   const currentWord = getCurrentWord(words, wordIndex);
+  const nextWord = wordIndex + 1 < words.length ? words[wordIndex + 1] : null;
   const currentChar = getCurrentChar(currentWord, charIndex);
   const isInputCorrect = userInput.length > 0 && isCharacterCorrect(userInput[userInput.length - 1], currentChar);
 
-  // Memoized word completion handler
-  const completeWord = useCallback(() => {
+  // Memoized word completion handler. Receives the word's final correctness
+  // map so the exiting copy keeps its red/green feedback while animating out.
+  const completeWord = useCallback((finalCorrectness: Record<number, boolean>) => {
     setIsWordComplete(true);
 
     if (hasMoreWords(words, wordIndex)) {
+      // Keep the finished word mounted for its pan-up/fade-out animation
+      setExiting({
+        word: getCurrentWord(words, wordIndex),
+        correctness: finalCorrectness,
+        id: wordIndex
+      });
       // Move to next word immediately - no delay blocking input
       setWordIndex((prev) => prev + 1);
       setCharIndex(0);
@@ -53,13 +74,18 @@ function WordProgressionInput({ context, onComplete }: WordProgressionInputProps
 
     setUserInput((prevInput) => prevInput + char);
 
-    // Handle special characters (spaces, punctuation) - auto-skip
+    // Handle special characters (apostrophes, punctuation) - auto-skip,
+    // but record them as passed so they display a state (green)
     if (isSpecialChar(expectedChar)) {
+      setCharCorrectness((prev) => ({
+        ...prev,
+        [charIndex]: true
+      }));
       if (hasMoreChars(word, charIndex + 1)) {
         setCharIndex((prev) => prev + 1);
         setUserInput('');
       } else {
-        completeWord();
+        completeWord({ ...charCorrectness, [charIndex]: true });
       }
       return;
     }
@@ -77,9 +103,9 @@ function WordProgressionInput({ context, onComplete }: WordProgressionInputProps
       setCharIndex((prev) => prev + 1);
       setUserInput('');
     } else {
-      completeWord();
+      completeWord({ ...charCorrectness, [charIndex]: isCorrect });
     }
-  }, [wordIndex, charIndex, words, completeWord]);
+  }, [wordIndex, charIndex, words, charCorrectness, completeWord]);
 
   // Memoized backspace handler - unified logic
   const handleBackspace = useCallback(() => {
@@ -133,10 +159,12 @@ function WordProgressionInput({ context, onComplete }: WordProgressionInputProps
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleCharacterInput, handleBackspace]);
 
-  // Render current word with character feedback
+  // Render current word with character feedback.
+  // Keyed by wordIndex so each new word re-mounts and plays the
+  // slide-up-from-preview animation.
   const renderWord = () => {
     return (
-      <div className="word-display">
+      <div className="word-display" key={wordIndex}>
         {currentWord.split('').map((char, idx) => {
           let status: CharStatus = 'untyped';
 
@@ -163,7 +191,33 @@ function WordProgressionInput({ context, onComplete }: WordProgressionInputProps
 
   return (
     <div className="word-progression-section">
-      {renderWord()}
+      <div className="word-stage">
+        {exiting && (
+          <div
+            className="word-display word-exit"
+            key={`exit-${exiting.id}`}
+            aria-hidden="true"
+            onAnimationEnd={(e) => {
+              if (e.target === e.currentTarget) setExiting(null);
+            }}
+          >
+            {exiting.word.split('').map((char, idx) => (
+              <CharacterDisplay
+                key={idx}
+                char={char}
+                status={exiting.correctness[idx] ? 'correct' : 'incorrect'}
+                isCursor={false}
+              />
+            ))}
+          </div>
+        )}
+        {renderWord()}
+      </div>
+      {nextWord && (
+        <div className="word-next" key={`next-${wordIndex}`} aria-hidden="true">
+          {nextWord}
+        </div>
+      )}
     </div>
   );
 }
